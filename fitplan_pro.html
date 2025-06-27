@@ -1,0 +1,2726 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPlan Pro - Gerador Avançado de Dieta e Treino</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--dark);
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 6px;
+            border-radius: 3px;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: -1;
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .step.active .step-circle {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            transform: scale(1.1);
+        }
+
+        .step.completed .step-circle {
+            background: var(--success);
+        }
+
+        .form-section {
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .section-title {
+            color: var(--dark);
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            font-size: 1.2em;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .required {
+            color: var(--danger);
+        }
+
+        input, select, textarea {
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 17px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 15px;
+        }
+
+        .tab {
+            padding: 12px 25px;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #666;
+            border: 2px solid transparent;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        td {
+            padding: 15px 18px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #444;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+            transform: scale(1.01);
+            transition: all 0.2s;
+        }
+
+        .meal-header {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .exercise-set {
+            font-size: 14px;
+            color: #666;
+            padding: 3px 0;
+        }
+
+        .rest-day {
+            background: #fff3cd;
+            text-align: center;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd, #e8eaf6);
+            border-left: 5px solid var(--primary);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff3cd, #ffe0b2);
+            border-left: 5px solid var(--warning);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border-left: 5px solid var(--success);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 15px;
+        }
+
+        .meal-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .meal-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .meal-time {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--success), #66bb6a);
+            padding: 12px 30px;
+            border-radius: 50px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(76, 175, 80, 0.3);
+        }
+
+        .floating-timer {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--dark);
+            color: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .timer-display {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .water-tracker {
+            background: linear-gradient(135deg, #e1f5fe, #b3e5fc);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .water-glasses {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .glass {
+            width: 40px;
+            height: 60px;
+            border: 3px solid #2196f3;
+            border-radius: 0 0 15px 15px;
+            position: relative;
+            cursor: pointer;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .glass.filled {
+            background: #2196f3;
+        }
+
+        .glass:hover {
+            transform: scale(1.1);
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            
+            .button-group, .action-buttons, .floating-timer {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            td, th {
+                padding: 10px;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Melhorias para validação de formulários */
+        .form-group.error input,
+        .form-group.error select {
+            border-color: var(--danger);
+            background-color: #fff5f5;
+            animation: shake 0.3s ease-in-out;
+        }
+
+        .form-group.success input,
+        .form-group.success select {
+            border-color: var(--success);
+            background-color: #f0fff4;
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Sistema de notificações toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid var(--primary);
+            min-width: 300px;
+            max-width: 400px;
+            transform: translateX(100%);
+            opacity: 0;
+            animation: slideInToast 0.3s ease forwards;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--dark);
+        }
+
+        .toast-message {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .toast-close:hover {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        @keyframes slideInToast {
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutToast {
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Melhorias no modo escuro */
+        .dark-mode {
+            --primary: #7c3aed;
+            --secondary: #a855f7;
+            --dark: #f8fafc;
+            --light: #1e293b;
+        }
+
+        .dark-mode body {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: #f8fafc;
+        }
+
+        .dark-mode .container {
+            background: rgba(30, 41, 59, 0.95);
+            color: #f8fafc;
+        }
+
+        .dark-mode input,
+        .dark-mode select,
+        .dark-mode textarea {
+            background: #334155;
+            border-color: #475569;
+            color: #f8fafc;
+        }
+
+        .dark-mode input:focus,
+        .dark-mode select:focus,
+        .dark-mode textarea:focus {
+            background: #475569;
+            border-color: var(--primary);
+        }
+
+        .dark-mode .checkbox-group {
+            background: #334155;
+        }
+
+        .dark-mode .tab-content {
+            background: #334155;
+        }
+
+        .dark-mode table {
+            background: #334155;
+        }
+
+        .dark-mode td {
+            border-bottom-color: #475569;
+            color: #e2e8f0;
+        }
+
+        .dark-mode .meal-card {
+            background: #475569;
+        }
+
+        .dark-mode .stat-card {
+            background: linear-gradient(135deg, #475569, #334155);
+        }
+
+        /* Toggle para modo escuro */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .theme-toggle {
+            background: rgba(30, 41, 59, 0.9);
+            color: #f8fafc;
+        }
+
+        /* Melhorias na responsividade */
+        @media (max-width: 480px) {
+            .toast {
+                min-width: 280px;
+                margin: 0 10px;
+            }
+            
+            .theme-toggle {
+                top: 10px;
+                left: 10px;
+                padding: 10px 12px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toggle para modo escuro -->
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="themeIcon">🌙</span>
+        <span id="themeText">Escuro</span>
+    </button>
+
+    <!-- Container para notificações toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>💪 FitPlan Pro</h1>
+            <p class="subtitle">Seu Gerador Avançado de Dieta e Treino Personalizado</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-circle">1</div>
+                <span>Dados Pessoais</span>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-circle">2</div>
+                <span>Objetivos</span>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-circle">3</div>
+                <span>Preferências</span>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-circle">4</div>
+                <span>Restrições</span>
+            </div>
+        </div>
+
+        <!-- Step 1: Dados Pessoais -->
+        <div class="form-section active" id="section1">
+            <h2 class="section-title">
+                <span class="icon">👤</span>
+                Dados Pessoais
+            </h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Nome <span class="required">*</span></label>
+                    <input type="text" id="name" placeholder="Seu nome completo" required>
+                    <div class="error-message">Por favor, insira seu nome completo</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="gender">Sexo <span class="required">*</span></label>
+                    <select id="gender" required>
+                        <option value="">Selecione...</option>
+                        <option value="homem">Homem</option>
+                        <option value="mulher">Mulher</option>
+                    </select>
+                    <div class="error-message">Por favor, selecione seu sexo</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="age">Idade <span class="required">*</span></label>
+                    <input type="number" id="age" min="15" max="100" placeholder="Anos" required>
+                    <div class="error-message">Por favor, insira uma idade válida (15-100 anos)</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="height">Altura (cm) <span class="required">*</span></label>
+                    <input type="number" id="height" min="140" max="220" placeholder="Ex: 180" required>
+                    <div class="error-message">Por favor, insira uma altura válida (140-220 cm)</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="weight">Peso (kg) <span class="required">*</span></label>
+                    <input type="number" id="weight" min="40" max="200" step="0.1" placeholder="Ex: 75.5" required>
+                    <div class="error-message">Por favor, insira um peso válido (40-200 kg)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="body-fat">Percentual de Gordura (%) <small>(opcional)</small></label>
+                    <input type="number" id="body-fat" min="5" max="50" step="0.1" placeholder="Ex: 20">
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Objetivos -->
+        <div class="form-section" id="section2">
+            <h2 class="section-title">
+                <span class="icon">🎯</span>
+                Objetivos e Metas
+            </h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="goal">Objetivo Principal <span class="required">*</span></label>
+                    <select id="goal" required>
+                        <option value="">Selecione...</option>
+                        <option value="perda-gordura">Perda de Gordura</option>
+                        <option value="ganho-massa">Ganho de Massa Muscular</option>
+                        <option value="definicao">Definição Muscular</option>
+                        <option value="manutencao">Manutenção</option>
+                        <option value="performance">Melhora de Performance</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="target-weight">Peso Alvo (kg)</label>
+                    <input type="number" id="target-weight" min="40" max="200" step="0.1" placeholder="Seu peso ideal">
+                </div>
+
+                <div class="form-group">
+                    <label for="timeline">Prazo (semanas)</label>
+                    <input type="number" id="timeline" min="4" max="52" placeholder="Em quantas semanas?">
+                </div>
+
+                <div class="form-group">
+                    <label for="activity-level">Nível de Atividade Diária <span class="required">*</span></label>
+                    <select id="activity-level" required>
+                        <option value="">Selecione...</option>
+                        <option value="sedentario">Sedentário (pouco ou nenhum exercício)</option>
+                        <option value="leve">Levemente ativo (exercício leve 1-3 dias/semana)</option>
+                        <option value="moderado">Moderadamente ativo (exercício moderado 3-5 dias/semana)</option>
+                        <option value="ativo">Muito ativo (exercício intenso 6-7 dias/semana)</option>
+                        <option value="extremo">Extremamente ativo (atleta profissional)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Preferências -->
+        <div class="form-section" id="section3">
+            <h2 class="section-title">
+                <span class="icon">⚙️</span>
+                Preferências de Treino e Dieta
+            </h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="frequency">Frequência de Treino <span class="required">*</span></label>
+                    <select id="frequency" required>
+                        <option value="">Selecione...</option>
+                        <option value="3">3x por semana</option>
+                        <option value="4">4x por semana</option>
+                        <option value="5">5x por semana</option>
+                        <option value="6">6x por semana</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="workout-duration">Duração do Treino</label>
+                    <select id="workout-duration">
+                        <option value="45">45 minutos</option>
+                        <option value="60">60 minutos</option>
+                        <option value="90">90 minutos</option>
+                        <option value="120">120 minutos</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="experience">Experiência com Treinos</label>
+                    <select id="experience">
+                        <option value="iniciante">Iniciante (menos de 6 meses)</option>
+                        <option value="intermediario">Intermediário (6 meses a 2 anos)</option>
+                        <option value="avancado">Avançado (mais de 2 anos)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="diet-type">Tipo de Dieta <span class="required">*</span></label>
+                    <select id="diet-type" required>
+                        <option value="">Selecione...</option>
+                        <option value="onivora">Onívora (come de tudo)</option>
+                        <option value="vegetariana">Vegetariana (com ovos e laticínios)</option>
+                        <option value="vegetariana-restrita">Vegetariana (só laticínios)</option>
+                        <option value="vegana">Vegana (sem produtos animais)</option>
+                        <option value="pescetariana">Pescetariana (vegetais + peixes)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="meal-count">Número de Refeições/Dia</label>
+                    <select id="meal-count">
+                        <option value="3">3 refeições</option>
+                        <option value="4">4 refeições</option>
+                        <option value="5">5 refeições</option>
+                        <option value="6">6 refeições</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="budget">Orçamento Mensal (R$)</label>
+                    <select id="budget">
+                        <option value="baixo">Até R$ 300</option>
+                        <option value="medio">R$ 300 - 600</option>
+                        <option value="alto">R$ 600 - 1000</option>
+                        <option value="premium">Acima de R$ 1000</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Equipamentos Disponíveis:</h3>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="equip-academia" checked>
+                    <label for="equip-academia">Academia Completa</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="equip-halteres">
+                    <label for="equip-halteres">Halteres</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="equip-barra">
+                    <label for="equip-barra">Barra e Anilhas</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="equip-elasticos">
+                    <label for="equip-elasticos">Elásticos</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="equip-peso-corporal">
+                    <label for="equip-peso-corporal">Apenas Peso Corporal</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Restrições -->
+        <div class="form-section" id="section4">
+            <h2 class="section-title">
+                <span class="icon">⚠️</span>
+                Restrições e Condições de Saúde
+            </h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="restrictions">Restrições Alimentares</label>
+                    <input type="text" id="restrictions" placeholder="Ex: lactose, glúten, amendoim...">
+                </div>
+
+                <div class="form-group">
+                    <label for="allergies">Alergias</label>
+                    <input type="text" id="allergies" placeholder="Liste suas alergias alimentares">
+                </div>
+
+                <div class="form-group">
+                    <label for="medications">Medicamentos em Uso</label>
+                    <input type="text" id="medications" placeholder="Medicamentos que toma regularmente">
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Condições de Saúde:</h3>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="cond-diabetes">
+                    <label for="cond-diabetes">Diabetes</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="cond-hipertensao">
+                    <label for="cond-hipertensao">Hipertensão</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="cond-cardio">
+                    <label for="cond-cardio">Problemas Cardíacos</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="cond-articular">
+                    <label for="cond-articular">Problemas Articulares</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="cond-respiratorio">
+                    <label for="cond-respiratorio">Problemas Respiratórios</label>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label for="observations">Observações Adicionais</label>
+                <textarea id="observations" rows="4" placeholder="Adicione qualquer informação relevante sobre sua saúde, preferências ou objetivos..."></textarea>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="prevBtn" onclick="changeStep(-1)" class="btn-secondary" style="display: none;">
+                <span>←</span> Anterior
+            </button>
+            <button id="nextBtn" onclick="changeStep(1)">
+                Próximo <span>→</span>
+            </button>
+            <button id="generateBtn" onclick="generatePlan()" style="display: none;">
+                <span>✨</span> Gerar Meu Plano Personalizado
+            </button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Gerando seu plano personalizado...</p>
+        </div>
+        
+        <div class="result-section" id="results">
+            <div class="tab-container">
+                <div class="tab active" onclick="showTab('dashboard')">📊 Dashboard</div>
+                <div class="tab" onclick="showTab('training')">🏋️ Plano de Treino</div>
+                <div class="tab" onclick="showTab('diet')">🥗 Plano de Dieta</div>
+                <div class="tab" onclick="showTab('shopping')">🛒 Lista de Compras</div>
+                <div class="tab" onclick="showTab('supplements')">💊 Suplementação</div>
+                <div class="tab" onclick="showTab('progress')">📈 Acompanhamento</div>
+                <div class="tab" onclick="showTab('tips')">💡 Dicas e Orientações</div>
+            </div>
+            
+            <div id="dashboard" class="tab-content active"></div>
+            <div id="training" class="tab-content"></div>
+            <div id="diet" class="tab-content"></div>
+            <div id="shopping" class="tab-content"></div>
+            <div id="supplements" class="tab-content"></div>
+            <div id="progress" class="tab-content"></div>
+            <div id="tips" class="tab-content"></div>
+        </div>
+    </div>
+
+    <div class="floating-timer" id="restTimer">
+        <div class="timer-display" id="timerDisplay">00:00</div>
+        <button onclick="startTimer()" id="timerBtn">Iniciar Descanso</button>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+        let timerInterval = null;
+        let timerSeconds = 0;
+
+        function updateProgressBar() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function changeStep(direction) {
+            // Validar campos obrigatórios antes de avançar
+            if (direction > 0 && !validateCurrentStep()) {
+                return;
+            }
+
+            // Atualizar step
+            document.getElementById(`section${currentStep}`).classList.remove('active');
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            
+            if (direction > 0 && currentStep < totalSteps) {
+                document.getElementById(`step${currentStep}`).classList.add('completed');
+                showToast('success', 'Etapa Concluída', `Etapa ${currentStep} preenchida com sucesso!`, 2000);
+            }
+            
+            currentStep += direction;
+            
+            // Limitar entre 1 e totalSteps
+            if (currentStep < 1) currentStep = 1;
+            if (currentStep > totalSteps) currentStep = totalSteps;
+            
+            // Mostrar nova seção
+            document.getElementById(`section${currentStep}`).classList.add('active');
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            
+            // Atualizar botões
+            updateButtons();
+            updateProgressBar();
+            
+            // Salvar dados automaticamente
+            saveFormData();
+        }
+
+        function updateButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            prevBtn.style.display = currentStep === 1 ? 'none' : 'inline-flex';
+            
+            if (currentStep === totalSteps) {
+                nextBtn.style.display = 'none';
+                generateBtn.style.display = 'inline-flex';
+            } else {
+                nextBtn.style.display = 'inline-flex';
+                generateBtn.style.display = 'none';
+            }
+        }
+
+        function validateCurrentStep() {
+            const requiredFields = document.querySelectorAll(`#section${currentStep} [required]`);
+            let isValid = true;
+            
+            // Limpar validações anteriores
+            document.querySelectorAll('.form-group').forEach(group => {
+                group.classList.remove('error', 'success');
+            });
+            
+            for (let field of requiredFields) {
+                const formGroup = field.closest('.form-group');
+                
+                if (!field.value.trim()) {
+                    formGroup.classList.add('error');
+                    isValid = false;
+                } else {
+                    // Validações específicas por tipo de campo
+                    if (field.type === 'number') {
+                        const value = parseFloat(field.value);
+                        const min = parseFloat(field.min);
+                        const max = parseFloat(field.max);
+                        
+                        if (value < min || value > max) {
+                            formGroup.classList.add('error');
+                            isValid = false;
+                        } else {
+                            formGroup.classList.add('success');
+                        }
+                    } else {
+                        formGroup.classList.add('success');
+                    }
+                }
+            }
+            
+            if (!isValid) {
+                showToast('error', 'Campos obrigatórios', 'Por favor, preencha todos os campos obrigatórios corretamente.');
+                // Focar no primeiro campo com erro
+                const firstError = document.querySelector('.form-group.error input, .form-group.error select');
+                if (firstError) {
+                    firstError.focus();
+                }
+            }
+            
+            return isValid;
+        }
+
+        // Sistema de notificações toast
+        function showToast(type = 'info', title, message, duration = 5000) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type] || icons.info}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="removeToast(this.parentElement)">×</button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto remover após o tempo especificado
+            setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+        }
+
+        function removeToast(toast) {
+            if (toast && toast.parentElement) {
+                toast.style.animation = 'slideOutToast 0.3s ease forwards';
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.parentElement.removeChild(toast);
+                    }
+                }, 300);
+            }
+        }
+
+        // Sistema de modo escuro
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Claro';
+                localStorage.setItem('theme', 'dark');
+                showToast('success', 'Modo Escuro', 'Tema escuro ativado!', 2000);
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Escuro';
+                localStorage.setItem('theme', 'light');
+                showToast('success', 'Modo Claro', 'Tema claro ativado!', 2000);
+            }
+        }
+
+        // Carregar tema salvo
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeIcon').textContent = '☀️';
+                document.getElementById('themeText').textContent = 'Claro';
+            }
+        }
+
+        // Persistência de dados do formulário
+        function saveFormData() {
+            const formData = {};
+            const inputs = document.querySelectorAll('input, select, textarea');
+            
+            inputs.forEach(input => {
+                if (input.type === 'checkbox') {
+                    formData[input.id] = input.checked;
+                } else {
+                    formData[input.id] = input.value;
+                }
+            });
+            
+            localStorage.setItem('fitplanFormData', JSON.stringify(formData));
+        }
+
+        function loadFormData() {
+            const savedData = localStorage.getItem('fitplanFormData');
+            if (savedData) {
+                const formData = JSON.parse(savedData);
+                
+                Object.keys(formData).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        if (element.type === 'checkbox') {
+                            element.checked = formData[key];
+                        } else {
+                            element.value = formData[key];
+                        }
+                    }
+                });
+                
+                showToast('info', 'Dados Recuperados', 'Seus dados anteriores foram restaurados!', 3000);
+            }
+        }
+
+        // Salvar dados automaticamente quando o usuário digita
+        function setupAutoSave() {
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('change', saveFormData);
+                input.addEventListener('input', debounce(saveFormData, 1000));
+            });
+        }
+
+        // Função debounce para evitar muitas chamadas
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function calculateBMR(gender, weight, height, age) {
+            if (gender === 'homem') {
+                return 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+            } else {
+                return 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+            }
+        }
+
+        function calculateDailyCalories(bmr, activityLevel, goal) {
+            const activityFactors = {
+                'sedentario': 1.2,
+                'leve': 1.375,
+                'moderado': 1.55,
+                'ativo': 1.725,
+                'extremo': 1.9
+            };
+            
+            let tdee = bmr * activityFactors[activityLevel];
+            
+            switch(goal) {
+                case 'perda-gordura':
+                    return Math.round(tdee * 0.8);
+                case 'ganho-massa':
+                    return Math.round(tdee * 1.15);
+                case 'definicao':
+                    return Math.round(tdee * 0.9);
+                case 'performance':
+                    return Math.round(tdee * 1.05);
+                default:
+                    return Math.round(tdee);
+            }
+        }
+
+        function generateDashboard(userData) {
+            const { name, gender, age, height, weight, bodyFat, goal, targetWeight, calories, bmr, bmi, waterIntake } = userData;
+            
+            let html = '<h3>📊 Seu Dashboard Personalizado</h3>';
+            
+            html += '<div class="success-box">';
+            html += `<h4>Olá, ${name}! 👋</h4>`;
+            html += '<p>Seu plano personalizado foi criado com sucesso! Abaixo estão suas métricas e recomendações.</p>';
+            html += '</div>';
+            
+            html += '<div class="stat-grid">';
+            html += `<div class="stat-card">
+                <div class="stat-value">${bmi}</div>
+                <div class="stat-label">IMC</div>
+            </div>`;
+            html += `<div class="stat-card">
+                <div class="stat-value">${calories}</div>
+                <div class="stat-label">Calorias/Dia</div>
+            </div>`;
+            html += `<div class="stat-card">
+                <div class="stat-value">${Math.round(bmr)}</div>
+                <div class="stat-label">TMB</div>
+            </div>`;
+            html += `<div class="stat-card">
+                <div class="stat-value">${waterIntake}L</div>
+                <div class="stat-label">Água/Dia</div>
+            </div>`;
+            html += '</div>';
+            
+            // Análise do IMC
+            let bmiAnalysis = '';
+            if (bmi < 18.5) bmiAnalysis = 'Abaixo do peso';
+            else if (bmi < 25) bmiAnalysis = 'Peso normal';
+            else if (bmi < 30) bmiAnalysis = 'Sobrepeso';
+            else bmiAnalysis = 'Obesidade';
+            
+            html += '<div class="info-box">';
+            html += '<h4>Análise Corporal</h4>';
+            html += `<p><strong>Classificação IMC:</strong> ${bmiAnalysis}</p>`;
+            if (bodyFat) {
+                html += `<p><strong>Percentual de Gordura:</strong> ${bodyFat}%</p>`;
+            }
+            if (targetWeight) {
+                const weightDiff = targetWeight - weight;
+                html += `<p><strong>Meta de Peso:</strong> ${weightDiff > 0 ? 'Ganhar' : 'Perder'} ${Math.abs(weightDiff).toFixed(1)}kg</p>`;
+            }
+            html += '</div>';
+            
+            // Gráfico de progresso estimado
+            html += '<div class="chart-container">';
+            html += '<h4>Progresso Estimado</h4>';
+            html += '<canvas id="progressChart" width="400" height="200"></canvas>';
+            html += '</div>';
+            
+            // Resumo do plano
+            html += '<div class="info-box">';
+            html += '<h4>Resumo do Seu Plano</h4>';
+            html += `<p><strong>Objetivo:</strong> ${goal.replace('-', ' de ').toUpperCase()}</p>`;
+            html += `<p><strong>Frequência de Treino:</strong> ${document.getElementById('frequency').value}x por semana</p>`;
+            html += `<p><strong>Tipo de Dieta:</strong> ${document.getElementById('diet-type').selectedOptions[0].text}</p>`;
+            html += `<p><strong>Duração dos Treinos:</strong> ${document.getElementById('workout-duration').value} minutos</p>`;
+            html += '</div>';
+            
+            return html;
+        }
+
+        function generateTrainingPlan(frequency, goal, experience, equipment) {
+            const plans = {
+                3: {
+                    'Segunda': 'Peito, Ombros e Tríceps',
+                    'Terça': 'Descanso Ativo',
+                    'Quarta': 'Costas e Bíceps',
+                    'Quinta': 'Descanso',
+                    'Sexta': 'Pernas e Core',
+                    'Sábado': 'Descanso',
+                    'Domingo': 'Cardio Leve'
+                },
+                4: {
+                    'Segunda': 'Peito e Tríceps',
+                    'Terça': 'Costas e Bíceps',
+                    'Quarta': 'Descanso',
+                    'Quinta': 'Pernas',
+                    'Sexta': 'Ombros e Core',
+                    'Sábado': 'Descanso Ativo',
+                    'Domingo': 'Descanso'
+                },
+                5: {
+                    'Segunda': 'Peito',
+                    'Terça': 'Costas',
+                    'Quarta': 'Ombros e Core',
+                    'Quinta': 'Pernas (Quadríceps)',
+                    'Sexta': 'Braços e Panturrilha',
+                    'Sábado': 'Descanso Ativo',
+                    'Domingo': 'Descanso'
+                },
+                6: {
+                    'Segunda': 'Peito e Tríceps',
+                    'Terça': 'Costas e Bíceps',
+                    'Quarta': 'Pernas (Completo)',
+                    'Quinta': 'Ombros e Trapézio',
+                    'Sexta': 'Braços',
+                    'Sábado': 'Core e Cardio HIIT',
+                    'Domingo': 'Descanso'
+                }
+            };
+
+            const exercisesByExperience = {
+                'iniciante': {
+                    reps: '12-15',
+                    series: '3',
+                    descanso: '90s'
+                },
+                'intermediario': {
+                    reps: '10-12',
+                    series: '4',
+                    descanso: '60-90s'
+                },
+                'avancado': {
+                    reps: '8-12',
+                    series: '4-5',
+                    descanso: '45-60s'
+                }
+            };
+
+            const exp = exercisesByExperience[experience];
+
+            let html = '<h3>🏋️ Plano de Treino Semanal</h3>';
+            
+            html += '<div class="action-buttons">';
+            html += '<button onclick="showRestTimer()" class="btn-action">⏱️ Timer de Descanso</button>';
+            html += '<button onclick="window.print()" class="btn-action">🖨️ Imprimir Treino</button>';
+            html += '</div>';
+            
+            html += '<table><tr><th>Dia</th><th>Grupo Muscular</th><th>Exercícios</th><th>Séries x Reps</th></tr>';
+            
+            const plan = plans[frequency];
+            
+            for (const [day, muscle] of Object.entries(plan)) {
+                if (muscle.includes('Descanso')) {
+                    html += `<tr class="rest-day">
+                        <td>${day}</td>
+                        <td colspan="3">${muscle}</td>
+                    </tr>`;
+                } else {
+                    const exercises = getExercisesForMuscle(muscle, equipment, experience);
+                    html += `<tr>
+                        <td><strong>${day}</strong></td>
+                        <td>${muscle}</td>
+                        <td>${exercises.join('<br>')}</td>
+                        <td>${exp.series}x${exp.reps}</td>
+                    </tr>`;
+                }
+            }
+            
+            html += '</table>';
+            
+            html += '<div class="info-box" style="margin-top: 20px;">';
+            html += '<h4>Protocolo de Treino:</h4>';
+            html += `<ul>
+                <li><strong>Aquecimento:</strong> 10 minutos (5 min cardio + mobilidade articular)</li>
+                <li><strong>Séries:</strong> ${exp.series} séries por exercício</li>
+                <li><strong>Repetições:</strong> ${exp.reps} repetições</li>
+                <li><strong>Descanso:</strong> ${exp.descanso} entre séries</li>
+                <li><strong>Cadência:</strong> 2-0-2 (2s descida, 0s pausa, 2s subida)</li>
+                <li><strong>Progressão:</strong> Aumente 5-10% da carga quando conseguir fazer todas as séries com facilidade</li>
+            </ul>`;
+            html += '</div>';
+            
+            if (goal === 'perda-gordura') {
+                html += '<div class="warning-box">';
+                html += '<h4>Cardio para Perda de Gordura:</h4>';
+                html += '<p>Adicione 20-30 minutos de cardio após o treino ou em dias alternados:</p>';
+                html += '<ul>';
+                html += '<li>HIIT: 30s intenso / 30s recuperação (15-20 min)</li>';
+                html += '<li>Cardio moderado: 30-45 min (bike, esteira, elíptico)</li>';
+                html += '<li>Caminhada rápida: 45-60 min em dias de descanso</li>';
+                html += '</ul>';
+                html += '</div>';
+            }
+            
+            return html;
+        }
+
+        function getExercisesForMuscle(muscle, equipment, experience) {
+            const exercises = {
+                'Peito': ['Supino Reto', 'Supino Inclinado', 'Crucifixo', 'Crossover'],
+                'Costas': ['Puxada Frontal', 'Remada Curvada', 'Remada Unilateral', 'Pulldown'],
+                'Ombros': ['Desenvolvimento', 'Elevação Lateral', 'Elevação Frontal', 'Crucifixo Invertido'],
+                'Pernas': ['Agachamento', 'Leg Press', 'Extensora', 'Flexora', 'Panturrilha'],
+                'Braços': ['Rosca Direta', 'Rosca Martelo', 'Tríceps Pulley', 'Tríceps Testa'],
+                'Core': ['Prancha', 'Abdominal', 'Russian Twist', 'Elevação de Pernas']
+            };
+            
+            // Simplificar para iniciantes
+            if (experience === 'iniciante') {
+                return exercises[muscle.split(/[, ]/)[0]] ? exercises[muscle.split(/[, ]/)[0]].slice(0, 3) : ['Exercício Básico'];
+            }
+            
+            return exercises[muscle.split(/[, ]/)[0]] || ['Exercício Específico'];
+        }
+
+        function generateDietPlan(calories, dietType, goal, mealCount, restrictions) {
+            const proteinMultiplier = goal === 'ganho-massa' ? 2.2 : 1.8;
+            const weight = parseFloat(document.getElementById('weight').value);
+            const proteinGrams = Math.round(proteinMultiplier * weight);
+            const proteinCalories = proteinGrams * 4;
+            const fatCalories = calories * 0.25;
+            const fatGrams = Math.round(fatCalories / 9);
+            const carbCalories = calories - proteinCalories - fatCalories;
+            const carbGrams = Math.round(carbCalories / 4);
+
+            let html = '<h3>🥗 Plano de Dieta Personalizado</h3>';
+            
+            html += '<div class="stat-grid">';
+            html += `<div class="stat-card">
+                <div class="stat-value">${calories}</div>
+                <div class="stat-label">Calorias Totais</div>
+            </div>`;
+            html += `<div class="stat-card">
+                <div class="stat-value">${proteinGrams}g</div>
+                <div class="stat-label">Proteínas</div>
+            </div>`;
+            html += `<div class="stat-card">
+                <div class="stat-value">${carbGrams}g</div>
+                <div class="stat-label">Carboidratos</div>
+            </div>`;
+            html += `<div class="stat-card">
+                <div class="stat-value">${fatGrams}g</div>
+                <div class="stat-label">Gorduras</div>
+            </div>`;
+            html += '</div>';
+            
+            // Distribuição de macros por refeição
+            const mealDistribution = getMealDistribution(mealCount);
+            
+            html += '<h4 style="margin-top: 30px;">Plano Alimentar Diário</h4>';
+            
+            const vegetarianMeals = getVegetarianMeals(dietType, goal);
+            
+            Object.entries(mealDistribution).forEach(([mealName, percentage]) => {
+                const mealCalories = Math.round(calories * percentage);
+                const mealProtein = Math.round(proteinGrams * percentage);
+                const mealCarbs = Math.round(carbGrams * percentage);
+                const mealFat = Math.round(fatGrams * percentage);
+                
+                html += `<div class="meal-card">
+                    <div class="meal-time">${mealName}</div>
+                    <p><strong>Macros:</strong> ${mealCalories} cal | P: ${mealProtein}g | C: ${mealCarbs}g | G: ${mealFat}g</p>
+                    <p><strong>Opções de Alimentos:</strong></p>
+                    <ul>`;
+                
+                const meals = vegetarianMeals[mealName.toLowerCase().replace(' ', '_')] || vegetarianMeals.default;
+                meals.forEach(meal => {
+                    html += `<li>${meal}</li>`;
+                });
+                
+                html += '</ul></div>';
+            });
+            
+            html += '<div class="water-tracker">';
+            html += '<h4>💧 Hidratação Diária</h4>';
+            html += '<p>Meta: ' + calculateWaterIntake(weight) + ' litros de água por dia</p>';
+            html += '<div class="water-glasses">';
+            for (let i = 0; i < 8; i++) {
+                html += '<div class="glass" onclick="toggleGlass(this)"></div>';
+            }
+            html += '</div>';
+            html += '<p style="font-size: 0.9em; color: #666;">Clique nos copos para marcar seu progresso</p>';
+            html += '</div>';
+            
+            if (restrictions) {
+                html += '<div class="warning-box">';
+                html += `<h4>⚠️ Atenção às Restrições:</h4>`;
+                html += `<p>${restrictions}</p>`;
+                html += '<p>Certifique-se de substituir os alimentos conforme suas restrições.</p>';
+                html += '</div>';
+            }
+            
+            return html;
+        }
+
+        function getMealDistribution(mealCount) {
+            const distributions = {
+                3: {
+                    'Café da Manhã': 0.35,
+                    'Almoço': 0.40,
+                    'Jantar': 0.25
+                },
+                4: {
+                    'Café da Manhã': 0.25,
+                    'Lanche Manhã': 0.15,
+                    'Almoço': 0.35,
+                    'Jantar': 0.25
+                },
+                5: {
+                    'Café da Manhã': 0.20,
+                    'Lanche Manhã': 0.15,
+                    'Almoço': 0.30,
+                    'Lanche Tarde': 0.15,
+                    'Jantar': 0.20
+                },
+                6: {
+                    'Café da Manhã': 0.20,
+                    'Lanche Manhã': 0.10,
+                    'Almoço': 0.25,
+                    'Lanche Tarde': 0.15,
+                    'Jantar': 0.20,
+                    'Ceia': 0.10
+                }
+            };
+            
+            return distributions[mealCount] || distributions[5];
+        }
+
+        function getVegetarianMeals(dietType, goal) {
+            return {
+                café_da_manhã: [
+                    'Smoothie proteico (banana, aveia, leite de amêndoas, proteína de ervilha)',
+                    'Pão integral com queijo mussarela e suco natural',
+                    'Mingau de aveia com frutas, castanhas e canela',
+                    'Tapioca com queijo e vitamina de frutas',
+                    'Panqueca de aveia com frutas e mel'
+                ],
+                lanche_manhã: [
+                    'Mix de castanhas (30g)',
+                    'Frutas com pasta de amendoim',
+                    'Iogurte natural com granola',
+                    'Torrada integral com queijo'
+                ],
+                almoço: [
+                    'Arroz integral, feijão, salada variada, legumes refogados',
+                    'Macarrão integral com molho de tomate e queijo, salada verde',
+                    'Arroz, grão-de-bico ao curry, vegetais assados',
+                    'Risoto de legumes com queijo mussarela',
+                    'Lasanha de vegetais com molho branco'
+                ],
+                lanche_tarde: [
+                    'Smoothie com proteína de ervilha',
+                    'Pão integral com mussarela derretida',
+                    'Vitamina de frutas com aveia',
+                    'Mix de frutas secas e castanhas'
+                ],
+                jantar: [
+                    'Sopa de ervilha com pão integral',
+                    'Omelete de claras com legumes e salada',
+                    'Wrap integral de vegetais com queijo',
+                    'Pizza caseira vegetariana (massa integral)',
+                    'Crepioca recheada com legumes e queijo'
+                ],
+                ceia: [
+                    'Iogurte com chia',
+                    'Chá com torradas',
+                    'Frutas com canela',
+                    'Leite de amêndoas com aveia'
+                ],
+                default: ['Opção vegetariana balanceada']
+            };
+        }
+
+        function generateShoppingList(dietType, budget, mealCount) {
+            let html = '<h3>🛒 Lista de Compras Semanal</h3>';
+            
+            html += '<div class="info-box">';
+            html += `<p><strong>Orçamento estimado:</strong> ${getBudgetEstimate(budget)}</p>`;
+            html += '</div>';
+            
+            const categories = {
+                'Proteínas Vegetais': [
+                    { item: 'Feijão preto', qtd: '1kg', preco: 'R$ 8,00' },
+                    { item: 'Grão-de-bico', qtd: '500g', preco: 'R$ 12,00' },
+                    { item: 'Ervilha seca', qtd: '500g', preco: 'R$ 10,00' },
+                    { item: 'Queijo mussarela', qtd: '500g', preco: 'R$ 25,00' },
+                    { item: 'Iogurte natural', qtd: '1L', preco: 'R$ 12,00' },
+                    { item: 'Proteína de ervilha', qtd: '1 pote', preco: 'R$ 80,00' }
+                ],
+                'Carboidratos': [
+                    { item: 'Arroz integral', qtd: '2kg', preco: 'R$ 16,00' },
+                    { item: 'Macarrão integral', qtd: '500g', preco: 'R$ 8,00' },
+                    { item: 'Aveia em flocos', qtd: '500g', preco: 'R$ 10,00' },
+                    { item: 'Pão integral', qtd: '2 pacotes', preco: 'R$ 18,00' },
+                    { item: 'Batata doce', qtd: '2kg', preco: 'R$ 12,00' },
+                    { item: 'Tapioca', qtd: '500g', preco: 'R$ 15,00' }
+                ],
+                'Vegetais e Verduras': [
+                    { item: 'Alface', qtd: '2 pés', preco: 'R$ 6,00' },
+                    { item: 'Tomate', qtd: '1kg', preco: 'R$ 8,00' },
+                    { item: 'Cenoura', qtd: '1kg', preco: 'R$ 5,00' },
+                    { item: 'Abobrinha', qtd: '1kg', preco: 'R$ 6,00' },
+                    { item: 'Brócolis', qtd: '500g', preco: 'R$ 8,00' },
+                    { item: 'Espinafre', qtd: '1 maço', preco: 'R$ 5,00' }
+                ],
+                'Frutas': [
+                    { item: 'Banana', qtd: '2 dúzias', preco: 'R$ 16,00' },
+                    { item: 'Maçã', qtd: '1kg', preco: 'R$ 10,00' },
+                    { item: 'Laranja', qtd: '2kg', preco: 'R$ 8,00' },
+                    { item: 'Morango', qtd: '2 caixas', preco: 'R$ 20,00' },
+                    { item: 'Manga', qtd: '4 unidades', preco: 'R$ 12,00' }
+                ],
+                'Outros Essenciais': [
+                    { item: 'Castanha de caju', qtd: '200g', preco: 'R$ 20,00' },
+                    { item: 'Amendoim', qtd: '200g', preco: 'R$ 8,00' },
+                    { item: 'Leite de amêndoas', qtd: '2L', preco: 'R$ 24,00' },
+                    { item: 'Azeite extra virgem', qtd: '500ml', preco: 'R$ 25,00' },
+                    { item: 'Mel', qtd: '1 pote', preco: 'R$ 20,00' }
+                ]
+            };
+            
+            let total = 0;
+            
+            for (const [category, items] of Object.entries(categories)) {
+                html += `<h4>${category}</h4>`;
+                html += '<table><tr><th>Item</th><th>Quantidade</th><th>Preço Estimado</th></tr>';
+                
+                items.forEach(item => {
+                    html += `<tr>
+                        <td>${item.item}</td>
+                        <td>${item.qtd}</td>
+                        <td>${item.preco}</td>
+                    </tr>`;
+                    total += parseFloat(item.preco.replace('R$ ', '').replace(',', '.'));
+                });
+                
+                html += '</table>';
+            }
+            
+            html += '<div class="success-box" style="margin-top: 20px;">';
+            html += `<h4>Total Estimado: R$ ${total.toFixed(2)}</h4>`;
+            html += '<p>* Preços podem variar de acordo com sua região e local de compra.</p>';
+            html += '</div>';
+            
+            return html;
+        }
+
+        function getBudgetEstimate(budget) {
+            const estimates = {
+                'baixo': 'R$ 200 - 300',
+                'medio': 'R$ 300 - 600',
+                'alto': 'R$ 600 - 1000',
+                'premium': 'Acima de R$ 1000'
+            };
+            return estimates[budget] || 'R$ 400 - 600';
+        }
+
+        function generateSupplementPlan(goal, dietType, budget) {
+            let html = '<h3>💊 Plano de Suplementação</h3>';
+            
+            html += '<div class="warning-box">';
+            html += '<p><strong>⚠️ Importante:</strong> Consulte um nutricionista antes de iniciar qualquer suplementação.</p>';
+            html += '</div>';
+            
+            html += '<h4>Suplementos Essenciais para Vegetarianos:</h4>';
+            
+            const supplements = [
+                {
+                    name: 'Vitamina B12',
+                    dose: '2.4mcg/dia',
+                    timing: 'Qualquer horário',
+                    importance: '⭐⭐⭐⭐⭐',
+                    reason: 'Essencial para vegetarianos - não há fontes vegetais adequadas',
+                    price: 'R$ 20-40/mês'
+                },
+                {
+                    name: 'Proteína de Ervilha',
+                    dose: '1-2 scoops (25-50g)',
+                    timing: 'Pós-treino e/ou café da manhã',
+                    importance: '⭐⭐⭐⭐⭐',
+                    reason: 'Complementa proteína da dieta, auxilia ganho/manutenção muscular',
+                    price: 'R$ 80-150/mês'
+                },
+                {
+                    name: 'Creatina Monohidratada',
+                    dose: '5g/dia',
+                    timing: 'Qualquer horário (consistência é chave)',
+                    importance: '⭐⭐⭐⭐',
+                    reason: 'Melhora força, potência e recuperação muscular',
+                    price: 'R$ 30-50/mês'
+                },
+                {
+                    name: 'Vitamina D3',
+                    dose: '1000-2000 UI/dia',
+                    timing: 'Com refeição (lipossolúvel)',
+                    importance: '⭐⭐⭐⭐',
+                    reason: 'Importante para imunidade, saúde óssea e muscular',
+                    price: 'R$ 25-40/mês'
+                },
+                {
+                    name: 'Ômega-3 (Algas)',
+                    dose: '250-500mg EPA/DHA',
+                    timing: 'Com refeições',
+                    importance: '⭐⭐⭐',
+                    reason: 'Anti-inflamatório, saúde cardiovascular e cerebral',
+                    price: 'R$ 60-100/mês'
+                },
+                {
+                    name: 'Ferro + Vitamina C',
+                    dose: 'Conforme exames',
+                    timing: 'Estômago vazio ou com vitamina C',
+                    importance: '⭐⭐⭐',
+                    reason: 'Se exames mostrarem deficiência - comum em vegetarianos',
+                    price: 'R$ 20-40/mês'
+                }
+            ];
+            
+            html += '<table><tr><th>Suplemento</th><th>Dose</th><th>Horário</th><th>Importância</th><th>Investimento</th></tr>';
+            
+            supplements.forEach(supp => {
+                html += `<tr>
+                    <td><strong>${supp.name}</strong><br><small>${supp.reason}</small></td>
+                    <td>${supp.dose}</td>
+                    <td>${supp.timing}</td>
+                    <td>${supp.importance}</td>
+                    <td>${supp.price}</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+            
+            if (goal === 'ganho-massa') {
+                html += '<div class="info-box" style="margin-top: 20px;">';
+                html += '<h4>Suplementos Adicionais para Ganho de Massa:</h4>';
+                html += '<ul>';
+                html += '<li><strong>Beta-Alanina:</strong> 3-5g/dia - Melhora resistência muscular</li>';
+                html += '<li><strong>Citrulina Malato:</strong> 6-8g pré-treino - Melhora pump e recuperação</li>';
+                html += '<li><strong>ZMA (Zinco, Magnésio, B6):</strong> Antes de dormir - Recuperação e sono</li>';
+                html += '</ul>';
+                html += '</div>';
+            }
+            
+            html += '<div class="success-box">';
+            html += '<h4>Protocolo de Suplementação Sugerido:</h4>';
+            html += '<p><strong>Manhã:</strong> Vitamina B12, Vitamina D3, Ômega-3</p>';
+            html += '<p><strong>Pré-treino (30min antes):</strong> Creatina + água</p>';
+            html += '<p><strong>Pós-treino (até 30min depois):</strong> Proteína de Ervilha + banana</p>';
+            html += '<p><strong>Noite:</strong> Magnésio (se usar) para melhor sono</p>';
+            html += '</div>';
+            
+            return html;
+        }
+
+        function generateProgressTracking() {
+            let html = '<h3>📈 Acompanhamento de Progresso</h3>';
+            
+            html += '<div class="info-box">';
+            html += '<h4>Medições Semanais Recomendadas:</h4>';
+            html += '<ul>';
+            html += '<li><strong>Peso:</strong> Sempre no mesmo horário (manhã, jejum)</li>';
+            html += '<li><strong>Medidas:</strong> Cintura, quadril, braços, coxas</li>';
+            html += '<li><strong>Fotos:</strong> Frente, lado, costas (mesma iluminação)</li>';
+            html += '<li><strong>Performance:</strong> Cargas utilizadas nos treinos</li>';
+            html += '</ul>';
+            html += '</div>';
+            
+            html += '<h4>Tabela de Acompanhamento Semanal:</h4>';
+            html += '<table>';
+            html += '<tr><th>Semana</th><th>Peso (kg)</th><th>Cintura (cm)</th><th>Quadril (cm)</th><th>Braço (cm)</th><th>Observações</th></tr>';
+            
+            for (let i = 1; i <= 8; i++) {
+                html += `<tr>
+                    <td>Semana ${i}</td>
+                    <td>_____</td>
+                    <td>_____</td>
+                    <td>_____</td>
+                    <td>_____</td>
+                    <td>_____________________</td>
+                </tr>`;
+            }
+            
+            html += '</table>';
+            
+            html += '<div class="chart-container" style="margin-top: 30px;">';
+            html += '<h4>Indicadores de Progresso:</h4>';
+            html += '<div class="stat-grid">';
+            html += '<div class="stat-card"><div class="stat-label">Energia</div><div>⭐⭐⭐⭐⭐</div></div>';
+            html += '<div class="stat-card"><div class="stat-label">Sono</div><div>⭐⭐⭐⭐⭐</div></div>';
+            html += '<div class="stat-card"><div class="stat-label">Fome</div><div>⭐⭐⭐⭐⭐</div></div>';
+            html += '<div class="stat-card"><div class="stat-label">Humor</div><div>⭐⭐⭐⭐⭐</div></div>';
+            html += '</div>';
+            html += '</div>';
+            
+            html += '<div class="warning-box" style="margin-top: 20px;">';
+            html += '<h4>Quando Ajustar o Plano:</h4>';
+            html += '<ul>';
+            html += '<li>Peso estagnado por mais de 2 semanas</li>';
+            html += '<li>Perda de força nos treinos</li>';
+            html += '<li>Fadiga excessiva ou insônia</li>';
+            html += '<li>Fome constante ou falta de apetite</li>';
+            html += '</ul>';
+            html += '</div>';
+            
+            return html;
+        }
+
+        function generateTips(goal, dietType) {
+            let html = '<h3>💡 Dicas e Orientações Personalizadas</h3>';
+            
+            html += '<div class="success-box">';
+            html += '<h4>🌟 10 Dicas de Ouro para Seu Sucesso:</h4>';
+            html += '<ol>';
+            html += '<li><strong>Consistência é Tudo:</strong> Melhor 80% de aderência por 6 meses do que 100% por 2 semanas</li>';
+            html += '<li><strong>Hidratação:</strong> Beba água antes, durante e após os treinos</li>';
+            html += '<li><strong>Sono:</strong> 7-9 horas por noite são essenciais para resultados</li>';
+            html += '<li><strong>Preparação:</strong> Deixe marmitas prontas para a semana</li>';
+            html += '<li><strong>Proteína em Todas as Refeições:</strong> Garante saciedade e preservação muscular</li>';
+            html += '<li><strong>Vegetais Sempre:</strong> Pelo menos 5 porções de vegetais/frutas por dia</li>';
+            html += '<li><strong>Paciência:</strong> Resultados sustentáveis levam tempo</li>';
+            html += '<li><strong>Registro:</strong> Anote treinos e refeições para identificar padrões</li>';
+            html += '<li><strong>Comunidade:</strong> Encontre parceiros de treino ou grupos de apoio</li>';
+            html += '<li><strong>Flexibilidade:</strong> 90% de aderência > 100% de perfeição</li>';
+            html += '</ol>';
+            html += '</div>';
+            
+            if (goal === 'perda-gordura') {
+                html += '<div class="info-box">';
+                html += '<h4>🔥 Estratégias para Perda de Gordura:</h4>';
+                html += '<ul>';
+                html += '<li><strong>Déficit Moderado:</strong> Não corte calorias drasticamente</li>';
+                html += '<li><strong>Cardio Estratégico:</strong> Combine HIIT com cardio moderado</li>';
+                html += '<li><strong>Aumentar NEAT:</strong> Caminhe mais, use escadas, fique de pé</li>';
+                html += '<li><strong>Refeeds Semanais:</strong> 1 dia com mais carboidratos</li>';
+                html += '<li><strong>Gerenciar Stress:</strong> Cortisol alto atrapalha perda de gordura</li>';
+                html += '</ul>';
+                html += '</div>';
+            }
+            
+            html += '<div class="meal-card">';
+            html += '<h4>📅 Exemplo de Dia Perfeito:</h4>';
+            html += '<p><strong>6:00</strong> - Acordar, beber 500ml de água</p>';
+            html += '<p><strong>6:30</strong> - Café da manhã nutritivo</p>';
+            html += '<p><strong>9:30</strong> - Lanche + hidratação</p>';
+            html += '<p><strong>12:30</strong> - Almoço balanceado</p>';
+            html += '<p><strong>15:30</strong> - Lanche pré-treino</p>';
+            html += '<p><strong>17:00</strong> - Treino + hidratação</p>';
+            html += '<p><strong>18:30</strong> - Pós-treino (proteína)</p>';
+            html += '<p><strong>20:00</strong> - Jantar leve</p>';
+            html += '<p><strong>22:00</strong> - Preparar para dormir</p>';
+            html += '<p><strong>22:30</strong> - Dormir (7-8h de sono)</p>';
+            html += '</div>';
+            
+            html += '<div class="warning-box">';
+            html += '<h4>❌ Erros Comuns a Evitar:</h4>';
+            html += '<ul>';
+            html += '<li>Pular refeições ou ficar muitas horas sem comer</li>';
+            html += '<li>Não consumir proteína suficiente</li>';
+            html += '<li>Treinar demais sem descanso adequado</li>';
+            html += '<li>Ignorar sinais de fadiga do corpo</li>';
+            html += '<li>Comparar seus resultados com outros</li>';
+            html += '<li>Mudanças drásticas de uma vez</li>';
+            html += '<li>Não registrar progresso</li>';
+            html += '</ul>';
+            html += '</div>';
+            
+            html += '<div class="action-buttons" style="margin-top: 30px;">';
+            html += '<button onclick="window.print()" class="btn-action">🖨️ Imprimir Plano Completo</button>';
+            html += '<button onclick="savePlan()" class="btn-action">💾 Salvar PDF</button>';
+            html += '<button onclick="shareResults()" class="btn-action">📤 Compartilhar</button>';
+            html += '</div>';
+            
+            return html;
+        }
+
+        function calculateWaterIntake(weight) {
+            return (weight * 0.035).toFixed(1);
+        }
+
+        function generatePlan() {
+            if (!validateCurrentStep()) {
+                alert('Por favor, preencha todos os campos obrigatórios!');
+                return;
+            }
+            
+            // Mostrar loading
+            document.getElementById('loading').style.display = 'block';
+            
+            // Coletar todos os dados
+            const userData = {
+                name: document.getElementById('name').value,
+                gender: document.getElementById('gender').value,
+                age: parseInt(document.getElementById('age').value),
+                height: parseInt(document.getElementById('height').value),
+                weight: parseFloat(document.getElementById('weight').value),
+                bodyFat: document.getElementById('body-fat').value,
+                goal: document.getElementById('goal').value,
+                targetWeight: parseFloat(document.getElementById('target-weight').value),
+                timeline: parseInt(document.getElementById('timeline').value),
+                activityLevel: document.getElementById('activity-level').value,
+                frequency: parseInt(document.getElementById('frequency').value),
+                experience: document.getElementById('experience').value,
+                dietType: document.getElementById('diet-type').value,
+                mealCount: parseInt(document.getElementById('meal-count').value),
+                budget: document.getElementById('budget').value,
+                restrictions: document.getElementById('restrictions').value,
+                allergies: document.getElementById('allergies').value
+            };
+            
+            // Cálculos
+            userData.bmr = calculateBMR(userData.gender, userData.weight, userData.height, userData.age);
+            userData.calories = calculateDailyCalories(userData.bmr, userData.activityLevel, userData.goal);
+            userData.bmi = (userData.weight / Math.pow(userData.height/100, 2)).toFixed(1);
+            userData.waterIntake = calculateWaterIntake(userData.weight);
+            
+            // Simular delay de processamento
+            setTimeout(() => {
+                // Gerar conteúdo para cada aba
+                document.getElementById('dashboard').innerHTML = generateDashboard(userData);
+                document.getElementById('training').innerHTML = generateTrainingPlan(
+                    userData.frequency, 
+                    userData.goal, 
+                    userData.experience,
+                    getSelectedEquipment()
+                );
+                document.getElementById('diet').innerHTML = generateDietPlan(
+                    userData.calories, 
+                    userData.dietType, 
+                    userData.goal, 
+                    userData.mealCount,
+                    userData.restrictions
+                );
+                document.getElementById('shopping').innerHTML = generateShoppingList(
+                    userData.dietType, 
+                    userData.budget,
+                    userData.mealCount
+                );
+                document.getElementById('supplements').innerHTML = generateSupplementPlan(
+                    userData.goal, 
+                    userData.dietType,
+                    userData.budget
+                );
+                document.getElementById('progress').innerHTML = generateProgressTracking();
+                document.getElementById('tips').innerHTML = generateTips(userData.goal, userData.dietType);
+                
+                // Esconder loading e mostrar resultados
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                
+                // Criar gráfico de progresso se possível
+                setTimeout(createProgressChart, 100);
+            }, 2000);
+        }
+
+        function getSelectedEquipment() {
+            const equipment = [];
+            if (document.getElementById('equip-academia').checked) equipment.push('academia');
+            if (document.getElementById('equip-halteres').checked) equipment.push('halteres');
+            if (document.getElementById('equip-barra').checked) equipment.push('barra');
+            if (document.getElementById('equip-elasticos').checked) equipment.push('elasticos');
+            if (document.getElementById('equip-peso-corporal').checked) equipment.push('peso-corporal');
+            return equipment;
+        }
+
+        function createProgressChart() {
+            const canvas = document.getElementById('progressChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const weeks = 12;
+            const currentWeight = parseFloat(document.getElementById('weight').value);
+            const targetWeight = parseFloat(document.getElementById('target-weight').value) || currentWeight;
+            const weeklyChange = (targetWeight - currentWeight) / weeks;
+            
+            // Simular dados de progresso
+            const data = [];
+            for (let i = 0; i <= weeks; i++) {
+                data.push(currentWeight + (weeklyChange * i));
+            }
+            
+            // Desenhar gráfico simples
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 40;
+            
+            data.forEach((weight, index) => {
+                const x = padding + (index * (width - 2 * padding) / weeks);
+                const y = height - padding - ((weight - Math.min(...data)) / (Math.max(...data) - Math.min(...data))) * (height - 2 * padding);
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+        }
+
+        function toggleGlass(glass) {
+            glass.classList.toggle('filled');
+        }
+
+        function showRestTimer() {
+            document.getElementById('restTimer').style.display = 'block';
+        }
+
+        function startTimer() {
+            const btn = document.getElementById('timerBtn');
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                timerSeconds = 0;
+                btn.textContent = 'Iniciar Descanso';
+                document.getElementById('timerDisplay').textContent = '00:00';
+                return;
+            }
+            
+            btn.textContent = 'Parar';
+            timerSeconds = 90; // 90 segundos padrão
+            
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                const minutes = Math.floor(timerSeconds / 60);
+                const seconds = timerSeconds % 60;
+                document.getElementById('timerDisplay').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    btn.textContent = 'Iniciar Descanso';
+                    // Som de notificação
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmFgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+                    audio.play();
+                }
+            }, 1000);
+        }
+
+        function savePlan() {
+            const userData = getUserData();
+            if (!userData) {
+                showToast('error', 'Erro', 'Por favor, preencha o formulário primeiro!');
+                return;
+            }
+            
+            // Criar conteúdo para PDF
+            const content = generatePDFContent(userData);
+            
+            // Criar elemento temporário para impressão
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>FitPlan Pro - Plano Personalizado</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1, h2, h3 { color: #667eea; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 20px 0; }
+                        .stat-card { border: 1px solid #ddd; padding: 15px; text-align: center; border-radius: 8px; }
+                        .stat-value { font-size: 24px; font-weight: bold; color: #667eea; }
+                        .meal-card { border-left: 4px solid #667eea; padding: 15px; margin: 10px 0; background: #f9f9f9; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    ${content}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            
+            setTimeout(() => {
+                printWindow.print();
+                showToast('success', 'PDF Gerado', 'Seu plano foi preparado para impressão/salvamento!');
+            }, 500);
+        }
+
+        function generatePDFContent(userData) {
+            const { name, calories, bmr, bmi, waterIntake } = userData;
+            
+            return `
+                <h1>🏋️ FitPlan Pro - Plano Personalizado</h1>
+                <h2>Plano de ${name}</h2>
+                
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${bmi}</div>
+                        <div>IMC</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${calories}</div>
+                        <div>Calorias/Dia</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${Math.round(bmr)}</div>
+                        <div>TMB</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${waterIntake}L</div>
+                        <div>Água/Dia</div>
+                    </div>
+                </div>
+                
+                <h3>📋 Plano de Treino Semanal</h3>
+                ${generateTrainingTableForPDF()}
+                
+                <h3>🥗 Plano de Dieta</h3>
+                ${generateDietPlanForPDF(userData)}
+                
+                <h3>🛒 Lista de Compras</h3>
+                ${generateShoppingListForPDF()}
+                
+                <p style="margin-top: 40px; text-align: center; color: #666;">
+                    Gerado pelo FitPlan Pro em ${new Date().toLocaleDateString('pt-BR')}
+                </p>
+            `;
+        }
+
+        function generateTrainingTableForPDF() {
+            const frequency = document.getElementById('frequency').value || '4';
+            const plans = {
+                3: {
+                    'Segunda': 'Peito, Ombros e Tríceps',
+                    'Terça': 'Descanso Ativo',
+                    'Quarta': 'Costas e Bíceps',
+                    'Quinta': 'Descanso',
+                    'Sexta': 'Pernas e Core',
+                    'Sábado': 'Descanso',
+                    'Domingo': 'Cardio Leve'
+                },
+                4: {
+                    'Segunda': 'Peito e Tríceps',
+                    'Terça': 'Costas e Bíceps',
+                    'Quarta': 'Descanso',
+                    'Quinta': 'Pernas',
+                    'Sexta': 'Ombros e Core',
+                    'Sábado': 'Descanso Ativo',
+                    'Domingo': 'Descanso'
+                }
+            };
+            
+            const plan = plans[frequency] || plans[4];
+            let html = '<table><tr><th>Dia</th><th>Treino</th></tr>';
+            
+            Object.entries(plan).forEach(([day, workout]) => {
+                html += `<tr><td>${day}</td><td>${workout}</td></tr>`;
+            });
+            
+            html += '</table>';
+            return html;
+        }
+
+        function generateDietPlanForPDF(userData) {
+            const { calories } = userData;
+            const weight = parseFloat(document.getElementById('weight').value) || 70;
+            const proteinGrams = Math.round(1.8 * weight);
+            const fatGrams = Math.round(calories * 0.25 / 9);
+            const carbGrams = Math.round((calories - (proteinGrams * 4) - (fatGrams * 9)) / 4);
+            
+            return `
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${calories}</div>
+                        <div>Calorias Totais</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${proteinGrams}g</div>
+                        <div>Proteínas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${carbGrams}g</div>
+                        <div>Carboidratos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${fatGrams}g</div>
+                        <div>Gorduras</div>
+                    </div>
+                </div>
+                
+                <div class="meal-card">
+                    <h4>Café da Manhã (25% das calorias)</h4>
+                    <p>Calorias: ${Math.round(calories * 0.25)} | Proteína: ${Math.round(proteinGrams * 0.25)}g</p>
+                    <p>Sugestões: Ovos, aveia, frutas, iogurte</p>
+                </div>
+                
+                <div class="meal-card">
+                    <h4>Almoço (35% das calorias)</h4>
+                    <p>Calorias: ${Math.round(calories * 0.35)} | Proteína: ${Math.round(proteinGrams * 0.35)}g</p>
+                    <p>Sugestões: Arroz, feijão, carne/peixe, salada</p>
+                </div>
+                
+                <div class="meal-card">
+                    <h4>Lanche (15% das calorias)</h4>
+                    <p>Calorias: ${Math.round(calories * 0.15)} | Proteína: ${Math.round(proteinGrams * 0.15)}g</p>
+                    <p>Sugestões: Frutas, castanhas, iogurte</p>
+                </div>
+                
+                <div class="meal-card">
+                    <h4>Jantar (25% das calorias)</h4>
+                    <p>Calorias: ${Math.round(calories * 0.25)} | Proteína: ${Math.round(proteinGrams * 0.25)}g</p>
+                    <p>Sugestões: Proteína magra, vegetais, carboidrato complexo</p>
+                </div>
+            `;
+        }
+
+        function generateShoppingListForPDF() {
+            const dietType = document.getElementById('diet-type').value || 'onivora';
+            
+            const shoppingLists = {
+                'onivora': [
+                    'Proteínas: Frango, peixe, ovos, carne vermelha magra',
+                    'Carboidratos: Arroz integral, aveia, batata doce, quinoa',
+                    'Vegetais: Brócolis, espinafre, tomate, cenoura',
+                    'Frutas: Banana, maçã, laranja, berries',
+                    'Gorduras: Azeite, castanhas, abacate, sementes',
+                    'Laticínios: Iogurte natural, queijo cottage, leite'
+                ],
+                'vegetariana': [
+                    'Proteínas: Ovos, queijos, iogurte, leguminosas',
+                    'Carboidratos: Arroz integral, aveia, batata doce, quinoa',
+                    'Vegetais: Brócolis, espinafre, tomate, cenoura',
+                    'Frutas: Banana, maçã, laranja, berries',
+                    'Gorduras: Azeite, castanhas, abacate, sementes',
+                    'Leguminosas: Feijão, lentilha, grão-de-bico'
+                ]
+            };
+            
+            const list = shoppingLists[dietType] || shoppingLists['onivora'];
+            
+            return '<ul>' + list.map(item => `<li>${item}</li>`).join('') + '</ul>';
+        }
+
+        function shareResults() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'FitPlan Pro - Meu Plano Personalizado',
+                    text: 'Confira meu plano de dieta e treino personalizado criado pelo FitPlan Pro!',
+                    url: window.location.href
+                }).then(() => {
+                    showToast('success', 'Compartilhado', 'Plano compartilhado com sucesso!');
+                }).catch(() => {
+                    fallbackShare();
+                });
+            } else {
+                fallbackShare();
+            }
+        }
+
+        function fallbackShare() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('success', 'Link Copiado', 'Link do aplicativo copiado para a área de transferência!');
+            }).catch(() => {
+                showToast('info', 'Compartilhamento', 'Copie este link para compartilhar: ' + url);
+            });
+        }
+
+        function getUserData() {
+            const name = document.getElementById('name').value;
+            const gender = document.getElementById('gender').value;
+            const age = parseInt(document.getElementById('age').value);
+            const height = parseInt(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const goal = document.getElementById('goal').value;
+            const activityLevel = document.getElementById('activity-level').value;
+            
+            if (!name || !gender || !age || !height || !weight || !goal || !activityLevel) {
+                return null;
+            }
+            
+            const bmr = calculateBMR(gender, weight, height, age);
+            const calories = calculateDailyCalories(bmr, activityLevel, goal);
+            const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
+            const waterIntake = (weight * 0.035).toFixed(1);
+            
+            return {
+                name, gender, age, height, weight, goal, activityLevel,
+                bmr, calories, bmi, waterIntake
+            };
+        }
+
+        // Funcionalidade de gráfico de progresso avançado
+        function createProgressChart() {
+            const canvas = document.getElementById('progressChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const userData = getUserData();
+            if (!userData) return;
+            
+            // Simular dados de progresso para demonstração
+            const weeks = ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4', 'Semana 8', 'Semana 12'];
+            const currentWeight = userData.weight;
+            const targetWeight = parseFloat(document.getElementById('target-weight').value) || currentWeight;
+            const weightDiff = targetWeight - currentWeight;
+            
+            // Gerar progressão realista
+            const progressData = weeks.map((week, index) => {
+                const progress = (index + 1) / weeks.length;
+                const expectedChange = weightDiff * progress * 0.8; // 80% do objetivo
+                return Math.round((currentWeight + expectedChange) * 10) / 10;
+            });
+            
+            // Limpar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Configurações do gráfico
+            const padding = 40;
+            const chartWidth = canvas.width - 2 * padding;
+            const chartHeight = canvas.height - 2 * padding;
+            
+            const minWeight = Math.min(currentWeight, targetWeight) - 2;
+            const maxWeight = Math.max(currentWeight, targetWeight) + 2;
+            const weightRange = maxWeight - minWeight;
+            
+            // Desenhar eixos
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            
+            // Eixo Y
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, padding + chartHeight);
+            ctx.stroke();
+            
+            // Eixo X
+            ctx.beginPath();
+            ctx.moveTo(padding, padding + chartHeight);
+            ctx.lineTo(padding + chartWidth, padding + chartHeight);
+            ctx.stroke();
+            
+            // Desenhar linha de progresso
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            progressData.forEach((weight, index) => {
+                const x = padding + (index / (progressData.length - 1)) * chartWidth;
+                const y = padding + chartHeight - ((weight - minWeight) / weightRange) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                
+                // Desenhar pontos
+                ctx.fillStyle = '#667eea';
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            ctx.stroke();
+            
+            // Linha do objetivo
+            const targetY = padding + chartHeight - ((targetWeight - minWeight) / weightRange) * chartHeight;
+            ctx.strokeStyle = '#4caf50';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(padding, targetY);
+            ctx.lineTo(padding + chartWidth, targetY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Labels
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            
+            weeks.forEach((week, index) => {
+                const x = padding + (index / (weeks.length - 1)) * chartWidth;
+                ctx.fillText(week, x, padding + chartHeight + 20);
+            });
+            
+            // Label do objetivo
+            ctx.fillStyle = '#4caf50';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Meta: ${targetWeight}kg`, padding + chartWidth - 80, targetY - 10);
+        }
+
+        // Funcionalidade de calculadora de macros avançada
+        function calculateAdvancedMacros() {
+            const userData = getUserData();
+            if (!userData) return;
+            
+            const { weight, goal, calories } = userData;
+            const activityLevel = document.getElementById('activity-level').value;
+            
+            // Ajustar proteína baseado no objetivo e atividade
+            let proteinMultiplier = 1.6; // Base
+            
+            if (goal === 'ganho-massa') proteinMultiplier = 2.2;
+            else if (goal === 'perda-gordura') proteinMultiplier = 2.0;
+            else if (goal === 'definicao') proteinMultiplier = 1.8;
+            
+            if (activityLevel === 'ativo' || activityLevel === 'extremo') {
+                proteinMultiplier += 0.2;
+            }
+            
+            const proteinGrams = Math.round(proteinMultiplier * weight);
+            const proteinCalories = proteinGrams * 4;
+            
+            // Ajustar gordura baseado no objetivo
+            let fatPercentage = 0.25; // 25% padrão
+            if (goal === 'ganho-massa') fatPercentage = 0.30;
+            else if (goal === 'perda-gordura') fatPercentage = 0.20;
+            
+            const fatCalories = calories * fatPercentage;
+            const fatGrams = Math.round(fatCalories / 9);
+            
+            // Carboidratos com o restante
+            const carbCalories = calories - proteinCalories - fatCalories;
+            const carbGrams = Math.round(carbCalories / 4);
+            
+            return {
+                protein: proteinGrams,
+                carbs: carbGrams,
+                fat: fatGrams,
+                calories: calories
+            };
+        }
+
+        // Funcionalidade de rastreamento de água melhorada
+        function initWaterTracker() {
+            const waterTracker = document.querySelector('.water-tracker');
+            if (!waterTracker) return;
+            
+            const userData = getUserData();
+            const dailyGoal = userData ? parseFloat(userData.waterIntake) : 2.5;
+            const glassSize = 0.25; // 250ml por copo
+            const totalGlasses = Math.ceil(dailyGoal / glassSize);
+            
+            const glassesContainer = waterTracker.querySelector('.water-glasses');
+            glassesContainer.innerHTML = '';
+            
+            for (let i = 0; i < totalGlasses; i++) {
+                const glass = document.createElement('div');
+                glass.className = 'glass';
+                glass.onclick = () => toggleGlass(glass, i);
+                glassesContainer.appendChild(glass);
+            }
+            
+            // Carregar progresso salvo
+            const savedProgress = localStorage.getItem('waterProgress');
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                const today = new Date().toDateString();
+                if (progress.date === today) {
+                    progress.glasses.forEach(index => {
+                        const glass = glassesContainer.children[index];
+                        if (glass) glass.classList.add('filled');
+                    });
+                }
+            }
+        }
+
+        function toggleGlass(glass, index) {
+            glass.classList.toggle('filled');
+            
+            // Salvar progresso
+            const filledGlasses = Array.from(document.querySelectorAll('.glass.filled'))
+                .map(g => Array.from(g.parentElement.children).indexOf(g));
+            
+            const progress = {
+                date: new Date().toDateString(),
+                glasses: filledGlasses
+            };
+            
+            localStorage.setItem('waterProgress', JSON.stringify(progress));
+            
+            const totalGlasses = document.querySelectorAll('.glass').length;
+            const filledCount = filledGlasses.length;
+            const percentage = Math.round((filledCount / totalGlasses) * 100);
+            
+            if (percentage >= 100) {
+                showToast('success', 'Meta de Hidratação', 'Parabéns! Você atingiu sua meta diária de água! 💧');
+            }
+        }
+
+        // Inicializar aplicação
+        function initializeApp() {
+            updateProgressBar();
+            loadSavedTheme();
+            loadFormData();
+            setupAutoSave();
+            initWaterTracker();
+            
+            // Mostrar toast de boas-vindas
+            setTimeout(() => {
+                showToast('success', 'Bem-vindo ao FitPlan Pro!', 'Seu gerador avançado de dieta e treino personalizado.', 4000);
+            }, 1000);
+            
+            // Inicializar gráfico quando os resultados forem gerados
+            setTimeout(() => {
+                createProgressChart();
+            }, 2000);
+        }
+
+        // Executar quando a página carregar
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
